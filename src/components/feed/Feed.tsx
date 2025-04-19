@@ -18,7 +18,7 @@ const Feed = () => {
 
     getVideo();
 
-     
+
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();

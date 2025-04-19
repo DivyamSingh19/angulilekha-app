@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState, FormEvent } from 'react';
-import axios, { AxiosError } from 'axios';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, FormEvent } from "react";
+import axios, { AxiosError } from "axios";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
 interface LoginResponse {
   email?: string;
@@ -28,82 +35,95 @@ interface ApiError {
 }
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
-  const router = useRouter()
+  const router = useRouter();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      
+
       if (!apiUrl) {
-        throw new Error("API URL is not defined. Please add it to your .env.local file as NEXT_PUBLIC_API_URL");
+        throw new Error(
+          "API URL is not defined. Please add it to your .env.local file as NEXT_PUBLIC_API_URL"
+        );
       }
-      
+
       console.log("Submitting login to:", `${apiUrl}/api/auth/login-user`);
-      
-      const response = await axios.post<LoginResponse>(`${apiUrl}/api/auth/login-user`, {
-        email,
-        password
-      });
-      
+
+      const response = await axios.post<LoginResponse>(
+        `${apiUrl}/api/auth/login-user`,
+        {
+          email,
+          password,
+        }
+      );
+
       console.log("Login response:", response.data);
-      
+
       // More flexible response handling
       if (response.data) {
         // Try to extract email from different possible response structures
-        const userEmail = response.data.email || response.data.user?.email || '';
-        const userName = response.data.name || response.data.user?.name || '';
-        
+        const userEmail =
+          response.data.email || response.data.user?.email || "";
+        const userName = response.data.name || response.data.user?.name || "";
+
         if (userEmail) {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('userEmail', userEmail);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("userEmail", userEmail);
             if (userName) {
-              localStorage.setItem('userName', userName);
+              localStorage.setItem("userName", userName);
             }
           }
-          
+
           setSuccess(true);
-          
+
           // Redirect to home page after a brief delay to show success message
-          setTimeout(() => router.push('/'), 1500);
-        } else if (response.data.success || response.data.message?.toLowerCase().includes('success') || response.data.token) {
+          setTimeout(() => router.push("/"), 1500);
+        } else if (
+          response.data.success ||
+          response.data.message?.toLowerCase().includes("success") ||
+          response.data.token
+        ) {
           // If we have a success indicator but no user details
           setSuccess(true);
-          
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('userEmail', email);
+
+          if (typeof window !== "undefined") {
+            localStorage.setItem("userEmail", email);
           }
-          
-          setTimeout(() => router.push('/'), 1500);
+
+          setTimeout(() => router.push("/"), 1500);
         } else {
           // Response seems valid but doesn't match expected format
-          console.warn("Unexpected but successful response format:", response.data);
+          console.warn(
+            "Unexpected but successful response format:",
+            response.data
+          );
           setSuccess(true);
-          
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('userEmail', email);
+
+          if (typeof window !== "undefined") {
+            localStorage.setItem("userEmail", email);
           }
-          
-          setTimeout(() => router.push('/'), 1500);
+
+          setTimeout(() => router.push("/"), 1500);
         }
       } else {
-        throw new Error('Empty response from server');
+        throw new Error("Empty response from server");
       }
     } catch (err) {
       console.error("Login error:", err);
       const axiosError = err as AxiosError<ApiError>;
       setError(
-        axiosError.response?.data?.message || 
-        axiosError.message || 
-        'An error occurred during login'
+        axiosError.response?.data?.message ||
+          axiosError.message ||
+          "An error occurred during login"
       );
     } finally {
       setLoading(false);
@@ -116,18 +136,23 @@ const LoginPage: React.FC = () => {
       <div className="absolute top-20 left-20 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob"></div>
       <div className="absolute top-40 right-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000"></div>
       <div className="absolute bottom-20 left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-4000"></div>
-      
+
       {/* Glass effect card */}
       <Card className="w-full max-w-md relative backdrop-blur-sm bg-white/80 border border-white/20 shadow-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-gray-800">Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-gray-800">
+            Login
+          </CardTitle>
           <CardDescription className="text-center text-gray-600">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
-            <Alert variant="destructive" className="mb-4 bg-red-50 border border-red-100">
+            <Alert
+              variant="destructive"
+              className="mb-4 bg-red-50 border border-red-100"
+            >
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -139,7 +164,9 @@ const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-gray-700">Email</Label>
+                <Label htmlFor="email" className="text-gray-700">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -151,7 +178,9 @@ const LoginPage: React.FC = () => {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-gray-700">Password</Label>
+                <Label htmlFor="password" className="text-gray-700">
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -162,9 +191,9 @@ const LoginPage: React.FC = () => {
                   className="bg-white/60 backdrop-blur-sm focus:bg-white/80 transition-all"
                 />
               </div>
-              <Button 
-                type="submit" 
-                disabled={loading} 
+              <Button
+                type="submit"
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all"
               >
                 {loading ? (
@@ -182,7 +211,10 @@ const LoginPage: React.FC = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-600">
             Don&apos;t have an account?{" "}
-            <a href="/register" className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+            <a
+              href="/register"
+              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+            >
               Sign up
             </a>
           </p>
