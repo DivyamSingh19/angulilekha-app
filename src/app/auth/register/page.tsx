@@ -54,6 +54,11 @@ const RegisterPage: React.FC = () => {
       setLoading(false);
       return;
     }
+    if((password.length)<8){
+      setError("Password too small");
+      setLoading(false);
+      return;
+    }
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
@@ -104,10 +109,10 @@ const RegisterPage: React.FC = () => {
             localStorage.setItem("userEmail", email);
             localStorage.setItem("userName", name);
           }
-
-          setTimeout(() => router.push("/"), 1500);
+          
+          setTimeout(() => router.push('/ '), 1500);
         } else {
-          // Response seems valid but doesn't match expected format
+           
           console.warn(
             "Unexpected but successful response format:",
             response.data
@@ -118,8 +123,8 @@ const RegisterPage: React.FC = () => {
             localStorage.setItem("userEmail", email);
             localStorage.setItem("userName", name);
           }
-
-          setTimeout(() => router.push("/"), 1500);
+          
+          setTimeout(() => router.push('/'), 1500);
         }
       } else {
         throw new Error("Empty response from server");
