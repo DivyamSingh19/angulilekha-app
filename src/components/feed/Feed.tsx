@@ -18,7 +18,7 @@ const Feed = () => {
 
     getVideo();
 
-    // Optional: Cleanup function to stop the stream when component unmounts
+     
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
