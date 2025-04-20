@@ -2,20 +2,81 @@
 
 import React, { useState, FormEvent } from "react";
 import axios, { AxiosError } from "axios";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { motion, useMotionValue, useTransform } from "framer-motion";
+import { Circle, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+// Reusing the ElegantShape component from the register page
+function ElegantShape({
+  className,
+  delay = 0,
+  width = 400,
+  height = 100,
+  rotate = 0,
+  gradient = "from-white/[0.08]",
+}: {
+  className?: string;
+  delay?: number;
+  width?: number;
+  height?: number;
+  rotate?: number;
+  gradient?: string;
+}) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: -150,
+        rotate: rotate - 15,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        rotate: rotate,
+      }}
+      transition={{
+        duration: 2.4,
+        delay,
+        ease: [0.23, 0.86, 0.39, 0.96],
+        opacity: { duration: 1.2 },
+      }}
+      className={cn("absolute", className)}
+    >
+      <motion.div
+        animate={{
+          y: [0, 15, 0],
+        }}
+        transition={{
+          duration: 12,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "easeInOut",
+        }}
+        style={{
+          width,
+          height,
+        }}
+        className="relative"
+      >
+        <div
+          className={cn(
+            "absolute inset-0 rounded-full",
+            "bg-gradient-to-r to-transparent",
+            gradient,
+            "backdrop-blur-[2px] border-2 border-white/[0.15]",
+            "shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]",
+            "after:absolute after:inset-0 after:rounded-full",
+            "after:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"
+          )}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
 
 interface LoginResponse {
   email?: string;
@@ -24,7 +85,6 @@ interface LoginResponse {
     email: string;
     name?: string;
   };
-  // Add other possible response fields
   message?: string;
   success?: boolean;
   token?: string;
@@ -41,6 +101,19 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
   const router = useRouter();
+
+  const fadeUpVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 1,
+        delay: 0.3 + i * 0.2,
+        ease: [0.25, 0.4, 0.25, 1],
+      },
+    }),
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -68,9 +141,7 @@ const LoginPage: React.FC = () => {
 
       console.log("Login response:", response.data);
 
-      // More flexible response handling
       if (response.data) {
-        // Try to extract email from different possible response structures
         const userEmail =
           response.data.email || response.data.user?.email || "";
         const userName = response.data.name || response.data.user?.name || "";
@@ -84,15 +155,12 @@ const LoginPage: React.FC = () => {
           }
 
           setSuccess(true);
-
-          // Redirect to home page after a brief delay to show success message
           setTimeout(() => router.push("/"), 1500);
         } else if (
           response.data.success ||
           response.data.message?.toLowerCase().includes("success") ||
           response.data.token
         ) {
-          // If we have a success indicator but no user details
           setSuccess(true);
 
           if (typeof window !== "undefined") {
@@ -101,7 +169,6 @@ const LoginPage: React.FC = () => {
 
           setTimeout(() => router.push("/"), 1500);
         } else {
-          // Response seems valid but doesn't match expected format
           console.warn(
             "Unexpected but successful response format:",
             response.data
@@ -131,122 +198,155 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 overflow-hidden">
-      {/* Decorative background elements with blur */}
-      <div className="absolute top-20 left-20 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob"></div>
-      <div className="absolute top-40 right-20 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-20 left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-blob animation-delay-4000"></div>
+    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]">
+      {/* Background elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
 
-      {/* Glass effect card */}
-      <Card className="w-full max-w-md relative backdrop-blur-sm bg-white/80 border border-white/20 shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-gray-800">
-            Login
-          </CardTitle>
-          <CardDescription className="text-center text-gray-600">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      {/* Floating shapes */}
+      <div className="absolute inset-0 overflow-hidden">
+        <ElegantShape
+          delay={0.3}
+          width={600}
+          height={140}
+          rotate={12}
+          gradient="from-indigo-500/[0.15]"
+          className="left-[-10%] md:left-[-5%] top-[15%] md:top-[20%]"
+        />
+
+        <ElegantShape
+          delay={0.5}
+          width={500}
+          height={120}
+          rotate={-15}
+          gradient="from-rose-500/[0.15]"
+          className="right-[-5%] md:right-[0%] top-[70%] md:top-[75%]"
+        />
+
+        <ElegantShape
+          delay={0.4}
+          width={300}
+          height={80}
+          rotate={-8}
+          gradient="from-violet-500/[0.15]"
+          className="left-[5%] md:left-[10%] bottom-[5%] md:bottom-[10%]"
+        />
+
+        <ElegantShape
+          delay={0.6}
+          width={200}
+          height={60}
+          rotate={20}
+          gradient="from-amber-500/[0.15]"
+          className="right-[15%] md:right-[20%] top-[10%] md:top-[15%]"
+        />
+      </div>
+
+      {/* Form container */}
+      <div className="relative z-10 w-full max-w-md px-4">
+        <motion.div
+          custom={0}
+          variants={fadeUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] mb-8 mx-auto"
+        >
+          <Circle className="h-2 w-2 fill-rose-500/80" />
+          <span className="text-sm text-white/60 tracking-wide">
+            AnguliLekha
+          </span>
+        </motion.div>
+
+        <motion.div
+          custom={1}
+          variants={fadeUpVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full backdrop-blur-sm bg-white/[0.03] border border-white/[0.08] rounded-2xl shadow-2xl p-8"
+        >
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-white/90 to-rose-300">
+              Welcome Back
+            </h2>
+            <p className="text-white/40 mt-2 tracking-wide">
+              Sign in to continue your ISL recognition journey
+            </p>
+          </div>
+
           {error && (
-            <Alert
-              variant="destructive"
-              className="mb-4 bg-red-50 border border-red-100"
-            >
+            <Alert className="mb-6 bg-rose-500/10 border border-rose-500/20 text-rose-300">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
           {success && (
-            <Alert className="mb-4 bg-green-50 border border-green-100">
+            <Alert className="mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
               <AlertDescription>Login successful!</AlertDescription>
             </Alert>
           )}
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email" className="text-gray-700">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-white/60 backdrop-blur-sm focus:bg-white/80 transition-all"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password" className="text-gray-700">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-white/60 backdrop-blur-sm focus:bg-white/80 transition-all"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transition-all"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Login"
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-gray-600">
-            Don&apos;t have an account?{" "}
-            <a
-              href="/register"
-              className="text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-            >
-              Sign up
-            </a>
-          </p>
-        </CardFooter>
-      </Card>
 
-      {/* Add a style block for custom animation */}
-      <style jsx>{`
-        @keyframes blob {
-          0% {
-            transform: translate(0px, 0px) scale(1);
-          }
-          33% {
-            transform: translate(30px, -50px) scale(1.1);
-          }
-          66% {
-            transform: translate(-20px, 20px) scale(0.9);
-          }
-          100% {
-            transform: translate(0px, 0px) scale(1);
-          }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white/60 block text-sm">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-white/[0.03] border-white/[0.08] focus:border-white/20 text-white placeholder:text-white/30 focus:bg-white/[0.05]"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-white/60 block text-sm">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full bg-white/[0.03] border-white/[0.08] focus:border-white/20 text-white placeholder:text-white/30 focus:bg-white/[0.05]"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 mt-2 bg-gradient-to-r from-indigo-500 to-rose-500 hover:from-indigo-600 hover:to-rose-600 text-white font-medium rounded-md transition-all duration-300 border-none"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-white/40">
+              Don&apos;t have an account?{" "}
+              <a
+                href="/register"
+                className="text-indigo-300 hover:text-white transition-colors"
+              >
+                Create Account
+              </a>
+            </p>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
     </div>
   );
 };
