@@ -44,7 +44,7 @@ const Navbar = () => {
         {/* CTA Button - Desktop */}
         <div className="hidden md:block">
           <Link
-            href="/login"
+            href="/auth/login"
             className="relative inline-flex items-center justify-center px-4 py-1.5 text-base font-medium text-white border overflow-hidden transition-all"
             style={{
               borderWidth: "1px",
@@ -85,7 +85,7 @@ const Navbar = () => {
               </Link>
             ))}
             <Link
-              href="/login"
+              href="/auth/login"
               className="relative inline-flex items-center justify-center px-4 py-1.5 mt-2 text-base font-medium text-white border rounded-full overflow-hidden w-full transition-all"
               style={{
                 borderWidth: "1px",
