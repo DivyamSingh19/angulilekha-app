@@ -122,15 +122,13 @@ const LoginPage: React.FC = () => {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
+    
       if (!apiUrl) {
         throw new Error(
           "API URL is not defined. Please add it to your .env.local file as NEXT_PUBLIC_API_URL"
         );
       }
-
-      console.log("Submitting login to:", `${apiUrl}/api/auth/login-user`);
-
+    
       const response = await axios.post<LoginResponse>(
         `${apiUrl}/api/auth/login-user`,
         {
@@ -138,52 +136,33 @@ const LoginPage: React.FC = () => {
           password,
         }
       );
-
-      console.log("Login response:", response.data);
-
-      if (response.data) {
-        const userEmail =
-          response.data.email || response.data.user?.email || "";
-        const userName = response.data.name || response.data.user?.name || "";
-
-        if (userEmail) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem("userEmail", userEmail);
-            if (userName) {
-              localStorage.setItem("userName", userName);
-            }
-          }
-
-          setSuccess(true);
-          setTimeout(() => router.push("/"), 1500);
-        } else if (
-          response.data.success ||
-          response.data.message?.toLowerCase().includes("success") ||
-          response.data.token
-        ) {
-          setSuccess(true);
-
-          if (typeof window !== "undefined") {
-            localStorage.setItem("userEmail", email);
-          }
-
-          setTimeout(() => router.push("/"), 1500);
-        } else {
-          console.warn(
-            "Unexpected but successful response format:",
-            response.data
-          );
-          setSuccess(true);
-
-          if (typeof window !== "undefined") {
-            localStorage.setItem("userEmail", email);
-          }
-
-          setTimeout(() => router.push("/"), 1500);
-        }
-      } else {
-        throw new Error("Empty response from server");
+    
+      const data = response.data;
+      console.log("Login response:", data);
+    
+      const userEmail = data.email || data.user?.email || "";
+      const userName = data.name || data.user?.name || "";
+    
+      const isValidResponse =
+        !!userEmail ||
+        !!data.token ||
+        data.success === true ||
+        (data.message && data.message.toLowerCase().includes("success"));
+    
+      if (!isValidResponse) {
+        throw new Error("Invalid login credentials or malformed response");
       }
+    
+      // Store in localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userEmail", userEmail || email);
+        if (userName) {
+          localStorage.setItem("userName", userName);
+        }
+      }
+    
+      setSuccess(true);
+      setTimeout(() => router.push("/"), 1500);
     } catch (err) {
       console.error("Login error:", err);
       const axiosError = err as AxiosError<ApiError>;
@@ -195,7 +174,7 @@ const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]">

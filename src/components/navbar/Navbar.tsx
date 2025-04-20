@@ -1,13 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const email = localStorage.getItem("userEmail");
+    setIsAuthenticated(!!email);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setIsAuthenticated(false);
+    router.push("/auth/login");
+  };
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -43,18 +56,33 @@ const Navbar = () => {
 
         {/* CTA Button - Desktop */}
         <div className="hidden md:block">
-          <Link
-            href="/auth/login"
-            className="relative inline-flex items-center justify-center px-4 py-1.5 text-base font-medium text-white border overflow-hidden transition-all"
-            style={{
-              borderWidth: "1px",
-              borderImage:
-                "linear-gradient(to right, #a5b4fc, rgba(255,255,255,0.9), #fda4af) 1",
-              WebkitBackgroundClip: "padding-box",
-            }}
-          >
-            Login
-          </Link>
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="relative inline-flex items-center justify-center px-4 py-1.5 text-base font-medium text-white border overflow-hidden transition-all"
+              style={{
+                borderWidth: "1px",
+                borderImage:
+                  "linear-gradient(to right, #fda4af, rgba(255,255,255,0.9), #a5b4fc) 1",
+                WebkitBackgroundClip: "padding-box",
+              }}
+            >
+              Logout
+            </button>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="relative inline-flex items-center justify-center px-4 py-1.5 text-base font-medium text-white border overflow-hidden transition-all"
+              style={{
+                borderWidth: "1px",
+                borderImage:
+                  "linear-gradient(to right, #a5b4fc, rgba(255,255,255,0.9), #fda4af) 1",
+                WebkitBackgroundClip: "padding-box",
+              }}
+            >
+              Login
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -84,19 +112,37 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <Link
-              href="/auth/login"
-              className="relative inline-flex items-center justify-center px-4 py-1.5 mt-2 text-base font-medium text-white border rounded-full overflow-hidden w-full transition-all"
-              style={{
-                borderWidth: "1px",
-                borderImage:
-                  "linear-gradient(to right, #a5b4fc, rgba(255,255,255,0.9), #fda4af) 1",
-                WebkitBackgroundClip: "padding-box",
-              }}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                className="relative inline-flex items-center justify-center px-4 py-1.5 mt-2 text-base font-medium text-white border rounded-full overflow-hidden w-full transition-all"
+                style={{
+                  borderWidth: "1px",
+                  borderImage:
+                    "linear-gradient(to right, #fda4af, rgba(255,255,255,0.9), #a5b4fc) 1",
+                  WebkitBackgroundClip: "padding-box",
+                }}
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="relative inline-flex items-center justify-center px-4 py-1.5 mt-2 text-base font-medium text-white border rounded-full overflow-hidden w-full transition-all"
+                style={{
+                  borderWidth: "1px",
+                  borderImage:
+                    "linear-gradient(to right, #a5b4fc, rgba(255,255,255,0.9), #fda4af) 1",
+                  WebkitBackgroundClip: "padding-box",
+                }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </nav>
         </div>
       )}

@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { Circle, ChevronRight, Award, Book, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { div } from "@tensorflow/tfjs";
+import AuthLayout from "@/components/authLayout/authLayout";
 
 type Level = {
   id: string;
@@ -156,6 +158,8 @@ export default function TutorialLevels() {
   };
 
   return (
+    <div> 
+      <AuthLayout> 
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#030303]">
       {/* Background gradient effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.05] via-transparent to-rose-500/[0.05] blur-3xl" />
@@ -307,6 +311,8 @@ export default function TutorialLevels() {
 
       {/* Bottom gradient fade */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#030303] via-transparent to-[#030303]/80 pointer-events-none" />
+    </div>
+    </AuthLayout>
     </div>
   );
 }
