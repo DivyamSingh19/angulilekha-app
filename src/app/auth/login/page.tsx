@@ -2,7 +2,7 @@
 
 import React, { useState, FormEvent } from "react";
 import axios, { AxiosError } from "axios";
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Circle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
