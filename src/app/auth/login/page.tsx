@@ -52,7 +52,7 @@ const LoginPage: React.FC = () => {
       const response = await axios.post<LoginResponse>(`${apiUrl}/api/auth/login-user`, {
         email,
         password
-      });
+      }); 
       
       console.log("Login response:", response.data);
       
