@@ -75,6 +75,8 @@ const alphabetItems: AlphabetItem[] = Array.from({ length: 26 }, (_, i) => {
 export default function AlphabetTutorial() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cameraActive, setCameraActive] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
@@ -82,6 +84,7 @@ export default function AlphabetTutorial() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [videoLoading, setVideoLoading] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const currentItem = alphabetItems[currentIndex];
 
@@ -101,13 +104,71 @@ export default function AlphabetTutorial() {
     setVideoLoading(true);
   }, [currentIndex]);
 
-  // Simulate camera activation
-  const toggleCamera = () => {
-    setCameraActive(!cameraActive);
+  // Start camera
+  const startCamera = async () => {
+    try {
+      // Reset any previous errors
+      setCameraError(null);
+
+      // Request access to the user's camera
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false,
+      });
+
+      // Store stream reference for cleanup
+      streamRef.current = stream;
+
+      // Set video source to the camera stream
+      if (cameraRef.current) {
+        cameraRef.current.srcObject = stream;
+        cameraRef.current.play();
+      }
+
+      setCameraActive(true);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      setCameraError("Could not access camera. Please check permissions.");
+      setCameraActive(false);
+    }
+  };
+
+  // Stop camera
+  const stopCamera = () => {
+    // Stop all tracks in the stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    // Clear video element
+    if (cameraRef.current) {
+      cameraRef.current.srcObject = null;
+    }
+
+    setCameraActive(false);
     setAccuracy(null);
     setShowSuccess(false);
     setCountdown(null);
   };
+
+  // Toggle camera
+  const toggleCamera = () => {
+    if (cameraActive) {
+      stopCamera();
+    } else {
+      startCamera();
+    }
+  };
+
+  // Clean up camera on component unmount
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
 
   // Simulate gesture recognition
   const startRecognition = () => {
@@ -173,7 +234,7 @@ export default function AlphabetTutorial() {
   };
 
   const resetState = () => {
-    setCameraActive(false);
+    stopCamera();
     setAccuracy(null);
     setShowSuccess(false);
     setRecognizing(false);
@@ -318,14 +379,14 @@ export default function AlphabetTutorial() {
               <div className="aspect-video bg-black/40 relative">
                 {cameraActive ? (
                   <>
-                    {/* This would be your actual camera feed */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img
-                        src="/api/placeholder/400/320"
-                        alt="Camera feed"
-                        className="max-h-full max-w-full"
-                      />
-                    </div>
+                    {/* Actual camera feed video element */}
+                    <video
+                      ref={cameraRef}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      autoPlay
+                      playsInline
+                      muted
+                    />
 
                     {/* Recognition UI overlays */}
                     {recognizing && (
@@ -369,13 +430,26 @@ export default function AlphabetTutorial() {
                   </>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <button
-                      onClick={toggleCamera}
-                      className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                    >
-                      <Camera className="h-5 w-5" />
-                      <span>Start Camera</span>
-                    </button>
+                    {cameraError ? (
+                      <div className="text-center p-4">
+                        <XCircle className="h-8 w-8 text-rose-500 mx-auto mb-2" />
+                        <p className="text-rose-300 mb-2">{cameraError}</p>
+                        <button
+                          onClick={startCamera}
+                          className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={toggleCamera}
+                        className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                      >
+                        <Camera className="h-5 w-5" />
+                        <span>Start Camera</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
