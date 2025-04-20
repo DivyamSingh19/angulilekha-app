@@ -23,13 +23,54 @@ type AlphabetItem = {
   completed: boolean;
 };
 
-// Mock data for beginner level - Alphabet gestures
-const alphabetItems: AlphabetItem[] = Array.from({ length: 26 }, (_, i) => ({
-  letter: String.fromCharCode(65 + i), // A-Z
-  videoUrl: `/api/placeholder/400/320`, // This would be your Google Drive URL in production
-  description: `Hand sign for letter ${String.fromCharCode(65 + i)}`,
-  completed: i < 3, // First few are completed for demo purposes
-}));
+// Function to get Google Drive embed URL
+function getDriveEmbedUrl(fileId: string): string {
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+}
+
+// Google Drive file IDs for each alphabet letter (A-Z)
+// Replace these with your actual Google Drive file IDs
+const alphabetVideoIds = {
+  A: "1oWoalUPRYmgT2S9fyXZii_nrPkMD5mVW",
+  B: "13ARAoi33_YlOIHYSwYJgQWMVLM49LsQz",
+  C: "1BD9tBugQz51nzTE49Q0iObAezA_WSpgE",
+  D: "1VSN2VpbO2YAG4inyCk8nNx7rqzIfZWmG",
+  E: "1CKUkqEGuAUxohXGYX_FWcy_ALA-lJn1e",
+  F: "1sfyRschvDa1YpI9hRokFZ-hbMpccHCYH",
+  G: "1Ct_pqH9OjHutx8mPICWfYYxk-mXauQyD",
+  H: "1AJApTPb-7qrKd2QaRfH7yboU_oD8aEbY",
+  I: "1p_XHTzMBeoGffeMgdapHqmDza8mnSL2Y",
+  J: "1JyDdGaKKUeHXDajAyurBOwyrZkjs1CHN",
+  K: "1NkQrq_iw3oZcp5sEnfu6oeWbjJsPdsSU",
+  L: "1-h0A15vVnNmdowJz-oiFDYHiDEy_i-Lj",
+  M: "1l5xeKr5ER6iHbR766vn8OVrEWELdYGBv",
+  N: "1yTf2UArVKCmS1dqG1_l7QU6trTVVO9uY",
+  O: "189Tw5hYeXyU4swOH2OlS5mF5vNC6frI-",
+  P: "1vveGR3kl-5XWPH3HepDKAW29l1JuVnQw",
+  Q: "17RnN-k4vsqEznggsnd3_M8NVgbOF0cSm",
+  R: "1oyxjH6g-YMiuEuw2fDjMHVyMNOV4WU6p",
+  S: "1viFPbnhfy_Olij5shLZSAWuC_TKp3veh",
+  T: "1XqjCnSgOVOwc6-qzf0w2kxl1A73PKyaX",
+  U: "1gxrBtiZ1i4o_YdvtY-AhAm2JNBHBiuoA",
+  V: "19ER68MnS568D0NAISLGPhAp4xRqXqi56",
+  W: "18I2HDgcmmnmQojqirZ4y4QH0uxLo0byn",
+  X: "1wrvWnNMlc6nDCp1NazLu0fDxZX9yCkyM",
+  Y: "15CgDLm89vWi53hbm8DM_jdJ8O0_BaaLA",
+  Z: "1cmuMh8E8zUywBHYeXjddE1G91uyg6wWx",
+};
+
+// Create alphabet items array with Google Drive video URLs
+const alphabetItems: AlphabetItem[] = Array.from({ length: 26 }, (_, i) => {
+  const letter = String.fromCharCode(65 + i); // A-Z
+  return {
+    letter,
+    videoUrl: getDriveEmbedUrl(
+      alphabetVideoIds[letter as keyof typeof alphabetVideoIds]
+    ),
+    description: `Hand sign for letter ${letter}`,
+    completed: i < 3, // First few are completed for demo purposes
+  };
+});
 
 export default function AlphabetTutorial() {
   const router = useRouter();
@@ -40,8 +81,25 @@ export default function AlphabetTutorial() {
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [videoLoading, setVideoLoading] = useState(true);
 
   const currentItem = alphabetItems[currentIndex];
+
+  // Handle video loading
+  const handleVideoLoad = () => {
+    setVideoLoading(false);
+  };
+
+  // Handle video error
+  const handleVideoError = () => {
+    console.error(`Error loading video for letter ${currentItem.letter}`);
+    setVideoLoading(false);
+  };
+
+  // Reset video loading state when changing letters
+  useEffect(() => {
+    setVideoLoading(true);
+  }, [currentIndex]);
 
   // Simulate camera activation
   const toggleCamera = () => {
@@ -133,7 +191,7 @@ export default function AlphabetTutorial() {
       {/* Header with back button */}
       <header className="p-4 flex items-center justify-between border-b border-white/10">
         <button
-          onClick={() => router.push("/tutorial/levels")}
+          onClick={() => router.push("/level")}
           className="flex items-center space-x-2 text-white/70 hover:text-white transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -210,15 +268,23 @@ export default function AlphabetTutorial() {
             </div>
 
             <div className="aspect-video bg-black/40 relative flex items-center justify-center">
-              <video
-                ref={videoRef}
+              {videoLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <Loader2 className="h-8 w-8 text-white/70 animate-spin" />
+                </div>
+              )}
+
+              {/* Google Drive embedded iframe for video */}
+              <iframe
                 src={currentItem.videoUrl}
-                poster="/api/placeholder/400/320"
-                controls
-                className="max-h-full max-w-full"
-              >
-                Your browser does not support video playback.
-              </video>
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={`Letter ${currentItem.letter} tutorial`}
+                onLoad={handleVideoLoad}
+                onError={handleVideoError}
+              />
             </div>
 
             <div className="p-4">
