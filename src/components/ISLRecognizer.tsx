@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { usePrediction } from "@/hooks/usePrediction";
 
-const MODEL_PATH = "/model/";
+const MODEL_PATH = "/model/level-1/alphabets";
 
 const ISLRecognizer: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
