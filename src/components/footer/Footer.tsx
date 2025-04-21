@@ -58,7 +58,7 @@ const Footer = () => {
             className="flex flex-col md:items-end gap-6"
           >
             <div className="flex gap-8 text-sm">
-              {["Home", "Practice", "Quiz", "About"].map((item, i) => (
+              {["Home", "Practice", "About"].map((item, i) => (
                 <Link
                   key={item}
                   href={
